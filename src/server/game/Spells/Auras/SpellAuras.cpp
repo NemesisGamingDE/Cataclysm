@@ -360,6 +360,14 @@ m_isRemoved(false), m_isSingleTarget(false), m_isUsingCharges(false)
     // m_casterLevel = cast item level/caster level, caster level should be saved to db, confirmed with sniffs
 }
 
+AuraScript* Aura::GetScriptByName(std::string const& scriptName) const
+{
+    for (std::list<AuraScript*>::const_iterator itr = m_loadedScripts.begin(); itr != m_loadedScripts.end(); ++itr)
+        if ((*itr)->_GetScriptName()->compare(scriptName) == 0)
+            return *itr;
+    return NULL;
+}
+
 void Aura::_InitEffects(uint8 effMask, Unit* caster, int32 *baseAmount)
 {
     // shouldn't be in constructor - functions in AuraEffect::AuraEffect use polymorphism
@@ -548,7 +556,7 @@ void Aura::UpdateTargetMap(Unit* caster, bool apply)
             // persistent area aura does not hit flying targets
             if (GetType() == DYNOBJ_AURA_TYPE)
             {
-                if (itr->first->isInFlight())
+                if (itr->first->IsInFlight())
                     addUnit = false;
             }
             // unit auras can not stack with each other
@@ -952,7 +960,6 @@ bool Aura::CanBeSaved() const
         case 40075: // Fel Flak Fire
         case 55849: // Power Spark
             return false;
-            break;
     }
 
     // When a druid logins, he doesnt have either eclipse power, nor the marker auras, nor the eclipse buffs. Dont save them.
@@ -969,6 +976,31 @@ bool Aura::CanBeSaved() const
 bool Aura::CanBeSentToClient() const
 {
     return !IsPassive() || GetSpellInfo()->HasAreaAuraEffect() || HasEffectType(SPELL_AURA_ABILITY_IGNORE_AURASTATE) || HasEffectType(SPELL_AURA_CAST_WHILE_WALKING);
+}
+
+bool Aura::IsSingleTargetWith(Aura const* aura) const
+{
+    // Same spell?
+    if (GetSpellInfo()->IsRankOf(aura->GetSpellInfo()))
+        return true;
+
+    SpellSpecificType spec = GetSpellInfo()->GetSpellSpecific();
+    // spell with single target specific types
+    switch (spec)
+    {
+        case SPELL_SPECIFIC_JUDGEMENT:
+        case SPELL_SPECIFIC_MAGE_POLYMORPH:
+            if (aura->GetSpellInfo()->GetSpellSpecific() == spec)
+                return true;
+            break;
+        default:
+            break;
+    }
+
+    if (HasEffectType(SPELL_AURA_CONTROL_VEHICLE) && aura->HasEffectType(SPELL_AURA_CONTROL_VEHICLE))
+        return true;
+
+    return false;
 }
 
 void Aura::UnregisterSingleTarget()
@@ -999,8 +1031,7 @@ int32 Aura::CalcDispelChance(Unit* auraTarget, bool offensive) const
     if (offensive && auraTarget)
         resistChance += auraTarget->GetTotalAuraModifier(SPELL_AURA_MOD_DISPEL_RESIST);
 
-    resistChance = resistChance < 0 ? 0 : resistChance;
-    resistChance = resistChance > 100 ? 100 : resistChance;
+    RoundToInterval(resistChance, 0, 100);
     return 100 - resistChance;
 }
 
@@ -1080,7 +1111,7 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
         for (SpellAreaForAreaMap::const_iterator itr = saBounds.first; itr != saBounds.second; ++itr)
         {
             // some auras remove at aura remove
-            if (!itr->second->IsFitToRequirements((Player*)target, zone, area))
+            if (!itr->second->IsFitToRequirements(target->ToPlayer(), zone, area))
                 target->RemoveAurasDueToSpell(itr->second->spellId);
             // some auras applied at aura apply
             else if (itr->second->autocast)
@@ -1153,6 +1184,9 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
             case SPELLFAMILY_GENERIC:
                 switch (GetId())
                 {
+                    case 91836: //Forged Fury
+                        target->RemoveAura(91832);
+                    break;				
                     case 32474: // Buffeting Winds of Susurrus
                         if (target->GetTypeId() == TYPEID_PLAYER)
                             target->ToPlayer()->ActivateTaxiPathTo(506, GetId());
@@ -1174,6 +1208,114 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
             case SPELLFAMILY_DRUID:
                 if (!caster)
                     break;
+
+                switch (GetId())
+                {
+                    case 81021: // Stampede (Cat Form) Rank 1
+                    case 81022: // Stampede (Cat Form) Rank 2
+                    {
+                        if (apply)
+                            caster->CastSpell(caster, 89140, true); // Ravage! Caster Aura Spell 
+                        else
+                            caster->RemoveAurasDueToSpell(89140);
+                    
+                        break;
+                    }
+                    case 5229: // Enrage (Druid)
+                    {
+                        if (apply)
+                        {
+                            if (caster->GetShapeshiftForm() == FORM_BEAR)
+                            {
+                                if (caster->HasAura(48492)) // King of the jungle (Rank 1)
+                                {
+                                    int32 bp0;
+                                    bp0 = 5;
+                                    caster->CastCustomSpell(caster, 51185, &bp0, NULL, NULL, true);
+                                }
+                                else if (caster->HasAura(48494)) // King of the jungle (Rank 2)
+                                {
+                                    int32 bp0;
+                                    bp0 = 10;
+                                    caster->CastCustomSpell(caster, 51185, &bp0, NULL, NULL, true);
+                                }
+                                else if (caster->HasAura(48495)) // King of the jungle (Rank 3)
+                                {
+                                    int32 bp0;
+                                    bp0 = 15;
+                                    caster->CastCustomSpell(caster, 51185, &bp0, NULL, NULL, true);
+                                }
+                            }
+                        }
+                        else
+                            caster->RemoveAurasDueToSpell(51185);
+                        
+                        break;
+                    }
+                    case 5217: // Tiger's fury
+                    {
+                        if (apply)
+                        {
+                            if (caster->GetShapeshiftForm() == FORM_CAT)
+                            {
+                                if (caster->HasAura(48492)) // King of the jungle (Rank 1)
+                                {
+                                    int32 bp0;
+                                    bp0 = 20;
+                                    caster->CastCustomSpell(caster, 51178, &bp0, NULL, NULL, true);
+                                }
+                                else if (caster->HasAura(48494)) // King of the jungle (Rank 2)
+                                {
+                                    int32 bp0;
+                                    bp0 = 40;
+                                    caster->CastCustomSpell(caster, 51178, &bp0, NULL, NULL, true);
+                                }
+                                else if (caster->HasAura(48495)) // King of the jungle (Rank 3)
+                                {
+                                    int32 bp0;
+                                    bp0 = 60;
+                                    caster->CastCustomSpell(caster, 51178, &bp0, NULL, NULL, true);
+                                }
+                                
+                                if (caster->HasAura(80316)) // Primal madness (Rank 1)
+                                    caster->CastSpell(caster, 80879, false);
+                                else if (caster->HasAura(80317)) // Primal madness (Rank 2)
+                                    caster->CastSpell(caster, 80886, false);
+                            }
+                        }
+                        break;
+                    }
+                    case 50334: // Berserk (Druid)
+                    {
+                        if (apply)
+                        {
+                            if (caster->GetShapeshiftForm() == FORM_CAT)
+                            {
+                                if (caster->HasAura(80316))
+                                    caster->CastSpell(caster, 80879, false); // Primal madness (Rank 1)
+                                else if (caster->HasAura(80317))
+                                    caster->CastSpell(caster, 80886, false); // Primal madness (Rank 2)
+                            }
+                            else if (caster->GetShapeshiftForm() == FORM_BEAR)
+                            {
+                                if (caster->HasAura(80316))
+                                {
+                                    int32 basepoints0 = 60;
+                                    caster->CastCustomSpell(caster, 17080, &basepoints0, NULL, NULL, true);
+                                }
+                                else if (caster->HasAura(80317))
+                                {
+                                    int32 basepoints0 = 120;
+                                    caster->CastCustomSpell(caster, 17080, &basepoints0, NULL, NULL, true);
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    break;
+                }
+                break;
+                
                 // Rejuvenation
                 if (GetSpellInfo()->SpellFamilyFlags[0] & 0x10 && GetEffect(EFFECT_0))
                 {
@@ -1182,6 +1324,45 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                     {
                         int32 heal = GetEffect(EFFECT_0)->GetAmount();
                         caster->CastCustomSpell(target, 64801, &heal, NULL, NULL, true, NULL, GetEffect(EFFECT_0));
+                    }
+                }
+                // Enrage
+                if (GetSpellInfo()->SpellFamilyFlags[0] & 0x80000)
+                {
+                    //King of the Jungle
+                    if (apply)
+                    {
+                        if (AuraEffect const * aurEff = target->GetAuraEffect(SPELL_AURA_DUMMY, SPELLFAMILY_DRUID, 2850, 0))
+                        {
+                            int32 basepoints0 = aurEff->GetAmount();
+                            target->CastCustomSpell(target, 51185, &basepoints0, NULL, NULL, true, NULL, NULL, target->GetGUID());
+                        }
+                    }
+                    
+                    if (target->HasAura(70726))          // Druid T10 Feral 4P Bonus
+                    {
+                        if (apply)
+                            target->CastSpell(target, 70725, true);
+                    }
+                    else          // armor reduction implemented here
+                    {
+                        if (AuraEffect * auraEff = target->GetAuraEffectOfRankedSpell(1178, 0))
+                        {
+                            int32 value = auraEff->GetAmount();
+                            int32 mod;
+                            switch (auraEff->GetId())
+                            {
+                                case 1178:
+                                    mod = 27;
+                                    break;
+                                case 9635:
+                                    mod = 16;
+                                    break;
+                            }
+                            mod = value / 100 * mod;
+                            value = value + (apply ? -mod : mod);
+                            auraEff->ChangeAmount(value);
+                        }
                     }
                 }
                 break;
@@ -1407,24 +1588,6 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                 break;
             }
             break;
-        case SPELLFAMILY_ROGUE:
-            // Stealth
-            if (GetSpellInfo()->SpellFamilyFlags[0] & 0x00400000)
-            {
-                // Master of subtlety
-                if (AuraEffect const* aurEff = target->GetAuraEffect(31223, 0))
-                {
-                    if (!apply)
-                        target->CastSpell(target, 31666, true);
-                    else
-                    {
-                        int32 basepoints0 = aurEff->GetAmount();
-                        target->CastCustomSpell(target, 31665, &basepoints0, NULL, NULL, true);
-                    }
-                }
-                break;
-            }
-            break;
         case SPELLFAMILY_HUNTER:
             switch (GetId())
             {
@@ -1447,23 +1610,6 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
         case SPELLFAMILY_PALADIN:
             switch (GetId())
             {
-                case 31821:
-                    // Aura Mastery Triggered Spell Handler
-                    // If apply Concentration Aura -> trigger -> apply Aura Mastery Immunity
-                    // If remove Concentration Aura -> trigger -> remove Aura Mastery Immunity
-                    // If remove Aura Mastery -> trigger -> remove Aura Mastery Immunity
-                    // Do effects only on aura owner
-                    if (GetCasterGUID() != target->GetGUID())
-                        break;
-
-                    if (apply)
-                    {
-                        if ((GetSpellInfo()->Id == 31821 && target->HasAura(19746, GetCasterGUID())) || (GetSpellInfo()->Id == 19746 && target->HasAura(31821)))
-                            target->CastSpell(target, 64364, true);
-                    }
-                    else
-                        target->RemoveAurasDueToSpell(64364, GetCasterGUID());
-                    break;
                 case 31842: // Divine Favor
                     // Item - Paladin T10 Holy 2P Bonus
                     if (target->HasAura(70755))
@@ -1601,20 +1747,7 @@ bool Aura::CanStackWith(Aura const* existingAura) const
         }
     }
 
-    bool isVehicleAura1 = false;
-    bool isVehicleAura2 = false;
-    uint8 i = 0;
-    while (i < MAX_SPELL_EFFECTS && !(isVehicleAura1 && isVehicleAura2))
-    {
-        if (m_spellInfo->Effects[i].ApplyAuraName == SPELL_AURA_CONTROL_VEHICLE)
-            isVehicleAura1 = true;
-        if (existingSpellInfo->Effects[i].ApplyAuraName == SPELL_AURA_CONTROL_VEHICLE)
-            isVehicleAura2 = true;
-
-        ++i;
-    }
-
-    if (isVehicleAura1 && isVehicleAura2)
+    if (HasEffectType(SPELL_AURA_CONTROL_VEHICLE) && existingAura->HasEffectType(SPELL_AURA_CONTROL_VEHICLE))
     {
         Vehicle* veh = NULL;
         if (GetOwner()->ToUnit())
@@ -1626,7 +1759,7 @@ bool Aura::CanStackWith(Aura const* existingAura) const
         if (!veh->GetAvailableSeatCount())
             return false;   // No empty seat available
 
-        return true;        // Empty seat available (skip rest)
+        return true; // Empty seat available (skip rest)
     }
 
     // spell of same spell rank chain
@@ -2114,8 +2247,9 @@ bool Aura::CallScriptPrepareProcHandlers(AuraApplication const* aurApp, ProcEven
     return prepare;
 }
 
-void Aura::CallScriptProcHandlers(AuraApplication const* aurApp, ProcEventInfo& eventInfo)
+bool Aura::CallScriptProcHandlers(AuraApplication const* aurApp, ProcEventInfo& eventInfo)
 {
+    bool handled = false;
     for (std::list<AuraScript*>::iterator scritr = m_loadedScripts.begin(); scritr != m_loadedScripts.end(); ++scritr)
     {
         (*scritr)->_PrepareScriptCall(AURA_SCRIPT_HOOK_PROC, aurApp);
@@ -2123,8 +2257,11 @@ void Aura::CallScriptProcHandlers(AuraApplication const* aurApp, ProcEventInfo& 
         for (; hookItr != hookItrEnd; ++hookItr)
             hookItr->Call(*scritr, eventInfo);
 
+        handled |= (*scritr)->_IsDefaultActionPrevented();
         (*scritr)->_FinishScriptCall();
     }
+
+    return handled;
 }
 
 void Aura::CallScriptAfterProcHandlers(AuraApplication const* aurApp, ProcEventInfo& eventInfo)

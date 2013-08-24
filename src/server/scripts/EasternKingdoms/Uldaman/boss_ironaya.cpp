@@ -55,19 +55,19 @@ class boss_ironaya : public CreatureScript
             bool bHasCastedWstomp;
             bool bHasCastedKnockaway;
 
-            void Reset()
+            void Reset() OVERRIDE
             {
                 uiArcingTimer = 3000;
                 bHasCastedKnockaway = false;
                 bHasCastedWstomp = false;
             }
 
-            void EnterCombat(Unit* /*who*/)
+            void EnterCombat(Unit* /*who*/) OVERRIDE
             {
                 Talk(SAY_AGGRO);
             }
 
-            void UpdateAI(uint32 uiDiff)
+            void UpdateAI(uint32 uiDiff) OVERRIDE
             {
                 //Return since we have no target
                 if (!UpdateVictim())
@@ -76,12 +76,12 @@ class boss_ironaya : public CreatureScript
                 //If we are <50% hp do knockaway ONCE
                 if (!bHasCastedKnockaway && HealthBelowPct(50))
                 {
-                    DoCast(me->getVictim(), SPELL_KNOCKAWAY, true);
+                    DoCastVictim(SPELL_KNOCKAWAY, true);
 
                     // current aggro target is knocked away pick new target
                     Unit* target = SelectTarget(SELECT_TARGET_TOPAGGRO, 0);
 
-                    if (!target || target == me->getVictim())
+                    if (!target || target == me->GetVictim())
                         target = SelectTarget(SELECT_TARGET_TOPAGGRO, 1);
 
                     if (target)
@@ -108,7 +108,7 @@ class boss_ironaya : public CreatureScript
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const
+        CreatureAI* GetAI(Creature* creature) const OVERRIDE
         {
             return new boss_ironayaAI(creature);
         }

@@ -42,7 +42,7 @@ EndContentData */
 #include "WorldSession.h"
 
 /*######
-## mob_aquementas
+## npc_aquementas
 ######*/
 
 enum Aquementas
@@ -53,19 +53,19 @@ enum Aquementas
     SPELL_FROST_SHOCK   = 15089
 };
 
-class mob_aquementas : public CreatureScript
+class npc_aquementas : public CreatureScript
 {
 public:
-    mob_aquementas() : CreatureScript("mob_aquementas") { }
+    npc_aquementas() : CreatureScript("npc_aquementas") { }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
-        return new mob_aquementasAI (creature);
+        return new npc_aquementasAI (creature);
     }
 
-    struct mob_aquementasAI : public ScriptedAI
+    struct npc_aquementasAI : public ScriptedAI
     {
-        mob_aquementasAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_aquementasAI(Creature* creature) : ScriptedAI(creature) {}
 
         uint32 SendItemTimer;
         uint32 SwitchFactionTimer;
@@ -74,7 +74,7 @@ public:
         uint32 FrostShockTimer;
         uint32 AquaJetTimer;
 
-        void Reset()
+        void Reset() OVERRIDE
         {
             SendItemTimer = 0;
             SwitchFactionTimer = 10000;
@@ -106,7 +106,7 @@ public:
             Talk(AGGRO_YELL_AQUE, who->GetGUID());
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(uint32 diff) OVERRIDE
         {
             if (isFriendly)
             {
@@ -124,15 +124,15 @@ public:
             {
                 if (SendItemTimer <= diff)
                 {
-                    if (me->getVictim()->GetTypeId() == TYPEID_PLAYER)
-                        SendItem(me->getVictim());
+                    if (me->GetVictim()->GetTypeId() == TYPEID_PLAYER)
+                        SendItem(me->GetVictim());
                     SendItemTimer = 5000;
                 } else SendItemTimer -= diff;
             }
 
             if (FrostShockTimer <= diff)
             {
-                DoCast(me->getVictim(), SPELL_FROST_SHOCK);
+                DoCastVictim(SPELL_FROST_SHOCK);
                 FrostShockTimer = 15000;
             } else FrostShockTimer -= diff;
 
@@ -175,7 +175,7 @@ class npc_custodian_of_time : public CreatureScript
 public:
     npc_custodian_of_time() : CreatureScript("npc_custodian_of_time") { }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
         return new npc_custodian_of_timeAI(creature);
     }
@@ -269,10 +269,10 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/) {}
+        void EnterCombat(Unit* /*who*/) OVERRIDE { }
         void Reset() {}
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(uint32 diff) OVERRIDE
         {
             npc_escortAI::UpdateAI(diff);
         }
@@ -310,7 +310,7 @@ public:
 
     bool OnGossipHello(Player* player, Creature* creature)
     {
-        if (creature->isQuestGiver())
+        if (creature->IsQuestGiver())
             player->PrepareQuestMenu(creature->GetGUID());
 
         if (player->GetQuestStatus(10279) == QUEST_STATUS_INCOMPLETE || player->GetQuestRewardStatus(10279))
@@ -365,7 +365,7 @@ public:
         return true;
     }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
         return new npc_OOX17AI(creature);
     }
@@ -404,12 +404,12 @@ public:
 
         void Reset(){}
 
-        void EnterCombat(Unit* /*who*/)
+        void EnterCombat(Unit* /*who*/) OVERRIDE
         {
             Talk(SAY_OOX_AGGRO);
         }
 
-        void JustSummoned(Creature* summoned)
+        void JustSummoned(Creature* summoned) OVERRIDE
         {
             summoned->AI()->AttackStart(me);
         }
@@ -455,7 +455,7 @@ public:
         return true;
     }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
         return new npc_toogaAI(creature);
     }
@@ -470,7 +470,7 @@ public:
 
         uint64 TortaGUID;
 
-        void Reset()
+        void Reset() OVERRIDE
         {
             CheckSpeechTimer = 2500;
             PostEventTimer = 1000;
@@ -483,7 +483,7 @@ public:
         {
             FollowerAI::MoveInLineOfSight(who);
 
-            if (!me->getVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE | STATE_FOLLOW_POSTEVENT) && who->GetEntry() == NPC_TORTA)
+            if (!me->GetVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE | STATE_FOLLOW_POSTEVENT) && who->GetEntry() == NPC_TORTA)
             {
                 if (me->IsWithinDistInMap(who, INTERACTION_DISTANCE))
                 {
@@ -520,7 +520,7 @@ public:
                         PostEventTimer = 5000;
 
                         Creature* torta = Creature::GetCreature(*me, TortaGUID);
-                        if (!torta || !torta->isAlive())
+                        if (!torta || !torta->IsAlive())
                         {
                             //something happened, so just complete
                             SetFollowComplete();

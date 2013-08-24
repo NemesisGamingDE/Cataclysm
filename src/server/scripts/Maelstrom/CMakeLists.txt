@@ -27,4 +27,4 @@ set(scripts_STAT_SRCS
   Maelstrom/tolbarad_peninsula.cpp
 )
 
-message("  -> Prepared: Maelstrom")
+message("  -> Prepared: The Maelstrom")

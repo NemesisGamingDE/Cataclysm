@@ -123,7 +123,7 @@ bool GameObjectModel::initialize(const GameObject& go, const GameObjectDisplayIn
     //ID = 0;
     iPos = Vector3(go.GetPositionX(), go.GetPositionY(), go.GetPositionZ());
     phasemask = go.GetPhaseMask();
-    iScale = go.GetFloatValue(OBJECT_FIELD_SCALE_X);
+    iScale = go.GetObjectScale();
     iInvScale = 1.f / iScale;
 
     G3D::Matrix3 iRotation = G3D::Matrix3::fromEulerAnglesZYX(go.GetOrientation(), 0, 0);
@@ -143,7 +143,7 @@ bool GameObjectModel::initialize(const GameObject& go, const GameObjectDisplayIn
         if (Creature* c = const_cast<GameObject&>(go).SummonCreature(24440, pos.x, pos.y, pos.z, 0, TEMPSUMMON_MANUAL_DESPAWN))
         {
             c->setFaction(35);
-            c->SetFloatValue(OBJECT_FIELD_SCALE_X, 0.1f);
+            c->SetObjectScale(0.1f);
         }
     }
 #endif

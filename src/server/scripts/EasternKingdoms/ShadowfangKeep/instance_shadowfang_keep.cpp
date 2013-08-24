@@ -35,21 +35,30 @@ EndScriptData */
 
 #define MAX_ENCOUNTER              4
 
-enum eEnums
+enum Yells
 {
     SAY_BOSS_DIE_AD         = 4,
     SAY_BOSS_DIE_AS         = 3,
-    SAY_ARCHMAGE            = 0,
+    SAY_ARCHMAGE            = 0
+};
 
+enum Creatures
+{
     NPC_ASH                 = 3850,
     NPC_ADA                 = 3849,
     NPC_ARCHMAGE_ARUGAL     = 4275,
-    NPC_ARUGAL_VOIDWALKER   = 4627,
+    NPC_ARUGAL_VOIDWALKER   = 4627
+};
 
-    GO_COURTYARD_DOOR       = 18895,                        //door to open when talking to NPC's
-    GO_SORCERER_DOOR        = 18972,                        //door to open when Fenrus the Devourer
-    GO_ARUGAL_DOOR          = 18971,                        //door to open when Wolf Master Nandos
+enum GameObjects
+{
+    GO_COURTYARD_DOOR       = 18895, //door to open when talking to NPC's
+    GO_SORCERER_DOOR        = 18972, //door to open when Fenrus the Devourer
+    GO_ARUGAL_DOOR          = 18971  //door to open when Wolf Master Nandos
+};
 
+enum Spells
+{
     SPELL_ASHCROMBE_TELEPORT    = 15742
 };
 
@@ -66,7 +75,7 @@ class instance_shadowfang_keep : public InstanceMapScript
 public:
     instance_shadowfang_keep() : InstanceMapScript("instance_shadowfang_keep", 33) { }
 
-    InstanceScript* GetInstanceScript(InstanceMap* map) const
+    InstanceScript* GetInstanceScript(InstanceMap* map) const OVERRIDE
     {
         return new instance_shadowfang_keep_InstanceMapScript(map);
     }
@@ -89,7 +98,7 @@ public:
         uint8 uiPhase;
         uint16 uiTimer;
 
-        void Initialize()
+        void Initialize() OVERRIDE
         {
             memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
 
@@ -105,7 +114,7 @@ public:
             uiTimer = 0;
         }
 
-        void OnCreatureCreate(Creature* creature)
+        void OnCreatureCreate(Creature* creature) OVERRIDE
         {
             switch (creature->GetEntry())
             {
@@ -115,7 +124,7 @@ public:
             }
         }
 
-        void OnGameObjectCreate(GameObject* go)
+        void OnGameObjectCreate(GameObject* go) OVERRIDE
         {
             switch (go->GetEntry())
             {
@@ -142,14 +151,14 @@ public:
             Creature* pAda = instance->GetCreature(uiAdaGUID);
             Creature* pAsh = instance->GetCreature(uiAshGUID);
 
-            if (pAda && pAda->isAlive() && pAsh && pAsh->isAlive())
+            if (pAda && pAda->IsAlive() && pAsh && pAsh->IsAlive())
             {
                 pAda->AI()->Talk(SAY_BOSS_DIE_AD);
                 pAsh->AI()->Talk(SAY_BOSS_DIE_AS);
             }
         }
 
-        void SetData(uint32 type, uint32 data)
+        void SetData(uint32 type, uint32 data) OVERRIDE
         {
             switch (type)
             {
@@ -197,7 +206,7 @@ public:
             }
         }
 
-        uint32 GetData(uint32 type) const
+        uint32 GetData(uint32 type) const OVERRIDE
         {
             switch (type)
             {
@@ -213,12 +222,12 @@ public:
             return 0;
         }
 
-        std::string GetSaveData()
+        std::string GetSaveData() OVERRIDE
         {
             return str_data;
         }
 
-        void Load(const char* in)
+        void Load(const char* in) OVERRIDE
         {
             if (!in)
             {
@@ -247,7 +256,7 @@ public:
 
             Creature* pArchmage = instance->GetCreature(uiArchmageArugalGUID);
 
-            if (!pArchmage || !pArchmage->isAlive())
+            if (!pArchmage || !pArchmage->IsAlive())
                 return;
 
             if (uiPhase)

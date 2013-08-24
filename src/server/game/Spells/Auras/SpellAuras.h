@@ -169,8 +169,9 @@ class Aura
         bool IsRemoved() const { return m_isRemoved; }
         bool CanBeSentToClient() const;
         // Single cast aura helpers
-        bool IsSingleTarget() const {return m_isSingleTarget;}
-        void SetIsSingleTarget(bool val) { m_isSingleTarget = val;}
+        bool IsSingleTarget() const {return m_isSingleTarget; }
+        bool IsSingleTargetWith(Aura const* aura) const;
+        void SetIsSingleTarget(bool val) { m_isSingleTarget = val; }
         void UnregisterSingleTarget();
         int32 CalcDispelChance(Unit* auraTarget, bool offensive) const;
 
@@ -232,10 +233,12 @@ class Aura
         // Spell Proc Hooks
         bool CallScriptCheckProcHandlers(AuraApplication const* aurApp, ProcEventInfo& eventInfo);
         bool CallScriptPrepareProcHandlers(AuraApplication const* aurApp, ProcEventInfo& eventInfo);
-        void CallScriptProcHandlers(AuraApplication const* aurApp, ProcEventInfo& eventInfo);
+        bool CallScriptProcHandlers(AuraApplication const* aurApp, ProcEventInfo& eventInfo);
         void CallScriptAfterProcHandlers(AuraApplication const* aurApp, ProcEventInfo& eventInfo);
         bool CallScriptEffectProcHandlers(AuraEffect const* aurEff, AuraApplication const* aurApp, ProcEventInfo& eventInfo);
         void CallScriptAfterEffectProcHandlers(AuraEffect const* aurEff, AuraApplication const* aurApp, ProcEventInfo& eventInfo);
+
+        AuraScript* GetScriptByName(std::string const& scriptName) const;
 
         std::list<AuraScript*> m_loadedScripts;
     private:

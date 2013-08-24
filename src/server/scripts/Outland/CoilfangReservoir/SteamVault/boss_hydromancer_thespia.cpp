@@ -29,7 +29,7 @@ EndScriptData */
 
 /* ContentData
 boss_hydromancer_thespia
-mob_coilfang_waterelemental
+npc_coilfang_waterelemental
 EndContentData */
 
 #include "ScriptMgr.h"
@@ -56,9 +56,9 @@ class boss_hydromancer_thespia : public CreatureScript
 public:
     boss_hydromancer_thespia() : CreatureScript("boss_hydromancer_thespia") { }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
-        return new boss_thespiaAI (creature);
+        return new boss_thespiaAI(creature);
     }
 
     struct boss_thespiaAI : public ScriptedAI
@@ -74,7 +74,7 @@ public:
         uint32 LungBurst_Timer;
         uint32 EnvelopingWinds_Timer;
 
-        void Reset()
+        void Reset() OVERRIDE
         {
             LightningCloud_Timer = 15000;
             LungBurst_Timer = 7000;
@@ -84,7 +84,7 @@ public:
                 instance->SetData(TYPE_HYDROMANCER_THESPIA, NOT_STARTED);
         }
 
-        void JustDied(Unit* /*killer*/)
+        void JustDied(Unit* /*killer*/) OVERRIDE
         {
             Talk(SAY_DEAD);
 
@@ -92,12 +92,12 @@ public:
                 instance->SetData(TYPE_HYDROMANCER_THESPIA, DONE);
         }
 
-        void KilledUnit(Unit* /*victim*/)
+        void KilledUnit(Unit* /*victim*/) OVERRIDE
         {
             Talk(SAY_SLAY);
         }
 
-        void EnterCombat(Unit* /*who*/)
+        void EnterCombat(Unit* /*who*/) OVERRIDE
         {
             Talk(SAY_AGGRO);
 
@@ -105,7 +105,7 @@ public:
                 instance->SetData(TYPE_HYDROMANCER_THESPIA, IN_PROGRESS);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(uint32 diff) OVERRIDE
         {
             if (!UpdateVictim())
                 return;
@@ -151,30 +151,30 @@ public:
 
 };
 
-class mob_coilfang_waterelemental : public CreatureScript
+class npc_coilfang_waterelemental : public CreatureScript
 {
 public:
-    mob_coilfang_waterelemental() : CreatureScript("mob_coilfang_waterelemental") { }
+    npc_coilfang_waterelemental() : CreatureScript("npc_coilfang_waterelemental") { }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
-        return new mob_coilfang_waterelementalAI (creature);
+        return new npc_coilfang_waterelementalAI(creature);
     }
 
-    struct mob_coilfang_waterelementalAI : public ScriptedAI
+    struct npc_coilfang_waterelementalAI : public ScriptedAI
     {
-        mob_coilfang_waterelementalAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_coilfang_waterelementalAI(Creature* creature) : ScriptedAI(creature) {}
 
         uint32 WaterBoltVolley_Timer;
 
-        void Reset()
+        void Reset() OVERRIDE
         {
             WaterBoltVolley_Timer = 3000+rand()%3000;
         }
 
-        void EnterCombat(Unit* /*who*/) { }
+        void EnterCombat(Unit* /*who*/) OVERRIDE {}
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(uint32 diff) OVERRIDE
         {
             if (!UpdateVictim())
                 return;
@@ -194,5 +194,5 @@ public:
 void AddSC_boss_hydromancer_thespia()
 {
     new boss_hydromancer_thespia();
-    new mob_coilfang_waterelemental();
+    new npc_coilfang_waterelemental();
 }

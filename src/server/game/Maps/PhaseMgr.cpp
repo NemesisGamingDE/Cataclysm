@@ -17,6 +17,7 @@
 
 #include "PhaseMgr.h"
 #include "Chat.h"
+#include "Group.h"
 #include "Language.h"
 #include "ObjectMgr.h"
 #include "Player.h"
@@ -36,7 +37,10 @@ void PhaseMgr::Update()
         return;
 
     if (_UpdateFlags & PHASE_UPDATE_FLAG_CLIENTSIDE_CHANGED)
+    {
         phaseData.SendPhaseshiftToPlayer();
+        player->SetGroupUpdateFlag(GROUP_UPDATE_FLAG_PHASE);
+    }
 
     if (_UpdateFlags & PHASE_UPDATE_FLAG_SERVERSIDE_CHANGED)
         phaseData.SendPhaseMaskToPlayer();
@@ -225,7 +229,7 @@ void PhaseMgr::SetCustomPhase(uint32 phaseMask)
 
 uint32 PhaseData::GetCurrentPhasemask() const
 {
-    if (player->isGameMaster())
+    if (player->IsGameMaster())
         return uint32(PHASEMASK_ANYWHERE);
 
     if (_CustomPhasemask)
@@ -279,6 +283,18 @@ void PhaseData::SendPhaseshiftToPlayer()
     }
 
     player->GetSession()->SendSetPhaseShift(phaseIds, terrainswaps);
+}
+
+void PhaseData::GetActivePhases(std::set<uint32>& phases) const
+{
+    for (PhaseInfoContainer::const_iterator itr = spellPhaseInfo.begin(); itr != spellPhaseInfo.end(); ++itr)
+        if (itr->second.phaseId)
+            phases.insert(itr->second.phaseId);
+
+    // Phase Definitions
+    for (std::list<PhaseDefinition const*>::const_iterator itr = activePhaseDefinitions.begin(); itr != activePhaseDefinitions.end(); ++itr)
+        if ((*itr)->phaseId)
+            phases.insert((*itr)->phaseId);
 }
 
 void PhaseData::AddPhaseDefinition(PhaseDefinition const* phaseDefinition)
@@ -379,4 +395,9 @@ bool PhaseMgr::IsConditionTypeSupported(ConditionTypes conditionType)
         default:
             return false;
     }
+}
+
+void PhaseMgr::GetActivePhases(std::set<uint32>& phases) const
+{
+    phaseData.GetActivePhases(phases);
 }

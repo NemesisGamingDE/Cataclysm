@@ -29,25 +29,35 @@ EndScriptData */
 
 /* ContentData
 boss_mekgineer_steamrigger
-mob_steamrigger_mechanic
+npc_steamrigger_mechanic
 EndContentData */
 
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "steam_vault.h"
 
-enum MekgineerSteamrigger
+enum Yells
 {
     SAY_MECHANICS               = 0,
     SAY_AGGRO                   = 1,
     SAY_SLAY                    = 2,
-    SAY_DEATH                   = 3,
+    SAY_DEATH                   = 3
+};
 
+enum Spells
+{
     SPELL_SUPER_SHRINK_RAY      = 31485,
     SPELL_SAW_BLADE             = 31486,
     SPELL_ELECTRIFIED_NET       = 35107,
 
-    ENTRY_STREAMRIGGER_MECHANIC = 17951
+    SPELL_DISPEL_MAGIC          = 17201,
+    SPELL_REPAIR                = 31532,
+    H_SPELL_REPAIR              = 37936
+};
+
+enum Creatures
+{
+    NPC_STREAMRIGGER_MECHANIC = 17951
 };
 
 class boss_mekgineer_steamrigger : public CreatureScript
@@ -55,9 +65,9 @@ class boss_mekgineer_steamrigger : public CreatureScript
 public:
     boss_mekgineer_steamrigger() : CreatureScript("boss_mekgineer_steamrigger") { }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
-        return new boss_mekgineer_steamriggerAI (creature);
+        return new boss_mekgineer_steamriggerAI(creature);
     }
 
     struct boss_mekgineer_steamriggerAI : public ScriptedAI
@@ -76,7 +86,7 @@ public:
         bool Summon50;
         bool Summon25;
 
-        void Reset()
+        void Reset() OVERRIDE
         {
             Shrink_Timer = 20000;
             Saw_Blade_Timer = 15000;
@@ -90,7 +100,7 @@ public:
                 instance->SetData(TYPE_MEKGINEER_STEAMRIGGER, NOT_STARTED);
         }
 
-        void JustDied(Unit* /*killer*/)
+        void JustDied(Unit* /*killer*/) OVERRIDE
         {
             Talk(SAY_DEATH);
 
@@ -98,12 +108,12 @@ public:
                 instance->SetData(TYPE_MEKGINEER_STEAMRIGGER, DONE);
         }
 
-        void KilledUnit(Unit* /*victim*/)
+        void KilledUnit(Unit* /*victim*/) OVERRIDE
         {
             Talk(SAY_SLAY);
         }
 
-        void EnterCombat(Unit* /*who*/)
+        void EnterCombat(Unit* /*who*/) OVERRIDE
         {
             Talk(SAY_AGGRO);
 
@@ -116,24 +126,24 @@ public:
         {
             Talk(SAY_MECHANICS);
 
-            DoSpawnCreature(ENTRY_STREAMRIGGER_MECHANIC, 5, 5, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 240000);
-            DoSpawnCreature(ENTRY_STREAMRIGGER_MECHANIC, -5, 5, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 240000);
-            DoSpawnCreature(ENTRY_STREAMRIGGER_MECHANIC, -5, -5, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 240000);
+            DoSpawnCreature(NPC_STREAMRIGGER_MECHANIC, 5, 5, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 240000);
+            DoSpawnCreature(NPC_STREAMRIGGER_MECHANIC, -5, 5, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 240000);
+            DoSpawnCreature(NPC_STREAMRIGGER_MECHANIC, -5, -5, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 240000);
 
             if (rand()%2)
-                DoSpawnCreature(ENTRY_STREAMRIGGER_MECHANIC, 5, -7, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 240000);
+                DoSpawnCreature(NPC_STREAMRIGGER_MECHANIC, 5, -7, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 240000);
             if (rand()%2)
-                DoSpawnCreature(ENTRY_STREAMRIGGER_MECHANIC, 7, -5, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 240000);
+                DoSpawnCreature(NPC_STREAMRIGGER_MECHANIC, 7, -5, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 240000);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(uint32 diff) OVERRIDE
         {
             if (!UpdateVictim())
                 return;
 
             if (Shrink_Timer <= diff)
             {
-                DoCast(me->getVictim(), SPELL_SUPER_SHRINK_RAY);
+                DoCastVictim(SPELL_SUPER_SHRINK_RAY);
                 Shrink_Timer = 20000;
             } else Shrink_Timer -= diff;
 
@@ -142,14 +152,14 @@ public:
                 if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1))
                     DoCast(target, SPELL_SAW_BLADE);
                 else
-                    DoCast(me->getVictim(), SPELL_SAW_BLADE);
+                    DoCastVictim(SPELL_SAW_BLADE);
 
                 Saw_Blade_Timer = 15000;
             } else Saw_Blade_Timer -= diff;
 
             if (Electrified_Net_Timer <= diff)
             {
-                DoCast(me->getVictim(), SPELL_ELECTRIFIED_NET);
+                DoCastVictim(SPELL_ELECTRIFIED_NET);
                 Electrified_Net_Timer = 10000;
             }
             else Electrified_Net_Timer -= diff;
@@ -187,26 +197,22 @@ public:
 
 };
 
-#define SPELL_DISPEL_MAGIC          17201
-#define SPELL_REPAIR                31532
-#define H_SPELL_REPAIR              37936
-
 #define MAX_REPAIR_RANGE            (13.0f)                 //we should be at least at this range for repair
 #define MIN_REPAIR_RANGE            (7.0f)                  //we can stop movement at this range to repair but not required
 
-class mob_steamrigger_mechanic : public CreatureScript
+class npc_steamrigger_mechanic : public CreatureScript
 {
 public:
-    mob_steamrigger_mechanic() : CreatureScript("mob_steamrigger_mechanic") { }
+    npc_steamrigger_mechanic() : CreatureScript("npc_steamrigger_mechanic") { }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
-        return new mob_steamrigger_mechanicAI (creature);
+        return new npc_steamrigger_mechanicAI(creature);
     }
 
-    struct mob_steamrigger_mechanicAI : public ScriptedAI
+    struct npc_steamrigger_mechanicAI : public ScriptedAI
     {
-        mob_steamrigger_mechanicAI(Creature* creature) : ScriptedAI(creature)
+        npc_steamrigger_mechanicAI(Creature* creature) : ScriptedAI(creature)
         {
             instance = creature->GetInstanceScript();
         }
@@ -215,19 +221,20 @@ public:
 
         uint32 Repair_Timer;
 
-        void Reset()
+        void Reset() OVERRIDE
         {
             Repair_Timer = 2000;
         }
 
-        void MoveInLineOfSight(Unit* /*who*/)
+        void MoveInLineOfSight(Unit* /*who*/) OVERRIDE
+
         {
             //react only if attacked
         }
 
-        void EnterCombat(Unit* /*who*/) { }
+        void EnterCombat(Unit* /*who*/) OVERRIDE {}
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(uint32 diff) OVERRIDE
         {
             if (Repair_Timer <= diff)
             {
@@ -268,5 +275,5 @@ public:
 void AddSC_boss_mekgineer_steamrigger()
 {
     new boss_mekgineer_steamrigger();
-    new mob_steamrigger_mechanic();
+    new npc_steamrigger_mechanic();
 }

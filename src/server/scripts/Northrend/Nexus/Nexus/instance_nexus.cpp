@@ -37,7 +37,7 @@ class instance_nexus : public InstanceMapScript
 public:
     instance_nexus() : InstanceMapScript("instance_nexus", 576) { }
 
-    InstanceScript* GetInstanceScript(InstanceMap* map) const
+    InstanceScript* GetInstanceScript(InstanceMap* map) const OVERRIDE
     {
         return new instance_nexus_InstanceMapScript(map);
     }
@@ -57,7 +57,7 @@ public:
 
         std::string strInstData;
 
-        void Initialize()
+        void Initialize() OVERRIDE
         {
             memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
 
@@ -68,14 +68,14 @@ public:
             TelestrasContainmentSphere = 0;
         }
 
-        void OnCreatureCreate(Creature* creature)
+        void OnCreatureCreate(Creature* creature) OVERRIDE
         {
             Map::PlayerList const &players = instance->GetPlayers();
             uint32 TeamInInstance = 0;
 
             if (!players.isEmpty())
             {
-                if (Player* player = players.begin()->getSource())
+                if (Player* player = players.begin()->GetSource())
                     TeamInInstance = player->GetTeam();
             }
             switch (creature->GetEntry())
@@ -130,7 +130,7 @@ public:
             }
         }
 
-        void OnGameObjectCreate(GameObject* go)
+        void OnGameObjectCreate(GameObject* go) OVERRIDE
         {
             switch (go->GetEntry())
             {
@@ -158,7 +158,7 @@ public:
             }
         }
 
-        uint32 GetData(uint32 identifier) const
+        uint32 GetData(uint32 identifier) const OVERRIDE
         {
             switch (identifier)
             {
@@ -170,7 +170,7 @@ public:
             return 0;
         }
 
-        void SetData(uint32 identifier, uint32 data)
+        void SetData(uint32 identifier, uint32 data) OVERRIDE
         {
             switch (identifier)
             {
@@ -225,7 +225,7 @@ public:
             }
         }
 
-        uint64 GetData64(uint32 uiIdentifier) const
+        uint64 GetData64(uint32 uiIdentifier) const OVERRIDE
         {
             switch (uiIdentifier)
             {
@@ -238,7 +238,7 @@ public:
             return 0;
         }
 
-        std::string GetSaveData()
+        std::string GetSaveData() OVERRIDE
         {
             return strInstData;
         }

@@ -20,6 +20,7 @@ set(scripts_STAT_SRCS
   Kalimdor/ZulFarrak/zulfarrak.h
   Kalimdor/ZulFarrak/zulfarrak.cpp
   Kalimdor/ZulFarrak/instance_zulfarrak.cpp
+  Kalimdor/ZulFarrak/boss_zum_rah.cpp
   Kalimdor/CavernsOfTime/EscapeFromDurnholdeKeep/boss_epoch_hunter.cpp
   Kalimdor/CavernsOfTime/EscapeFromDurnholdeKeep/old_hillsbrad.h
   Kalimdor/CavernsOfTime/EscapeFromDurnholdeKeep/boss_leutenant_drake.cpp
@@ -46,12 +47,12 @@ set(scripts_STAT_SRCS
   Kalimdor/CavernsOfTime/CullingOfStratholme/culling_of_stratholme.cpp
   Kalimdor/CavernsOfTime/CullingOfStratholme/instance_culling_of_stratholme.cpp
   Kalimdor/CavernsOfTime/CullingOfStratholme/culling_of_stratholme.h
-  Kalimdor/CavernsOfTime/DarkPortal/dark_portal.h
-  Kalimdor/CavernsOfTime/DarkPortal/instance_dark_portal.cpp
-  Kalimdor/CavernsOfTime/DarkPortal/boss_chrono_lord_deja.cpp
-  Kalimdor/CavernsOfTime/DarkPortal/dark_portal.cpp
-  Kalimdor/CavernsOfTime/DarkPortal/boss_aeonus.cpp
-  Kalimdor/CavernsOfTime/DarkPortal/boss_temporus.cpp
+  Kalimdor/CavernsOfTime/TheBlackMorass/the_black_morass.h
+  Kalimdor/CavernsOfTime/TheBlackMorass/instance_the_black_morass.cpp
+  Kalimdor/CavernsOfTime/TheBlackMorass/boss_chrono_lord_deja.cpp
+  Kalimdor/CavernsOfTime/TheBlackMorass/the_black_morass.cpp
+  Kalimdor/CavernsOfTime/TheBlackMorass/boss_aeonus.cpp
+  Kalimdor/CavernsOfTime/TheBlackMorass/boss_temporus.cpp
   Kalimdor/BlackfathomDeeps/boss_kelris.cpp
   Kalimdor/BlackfathomDeeps/instance_blackfathom_deeps.cpp
   Kalimdor/BlackfathomDeeps/boss_gelihast.cpp
@@ -66,6 +67,7 @@ set(scripts_STAT_SRCS
   Kalimdor/Maraudon/boss_landslide.cpp
   Kalimdor/Maraudon/boss_celebras_the_cursed.cpp
   Kalimdor/Maraudon/boss_noxxion.cpp
+  Kalimdor/Maraudon/instance_maraudon.cpp
   Kalimdor/TempleOfAhnQiraj/boss_fankriss.cpp
   Kalimdor/TempleOfAhnQiraj/boss_huhuran.cpp
   Kalimdor/TempleOfAhnQiraj/instance_temple_of_ahnqiraj.cpp
@@ -111,6 +113,8 @@ set(scripts_STAT_SRCS
   Kalimdor/OnyxiasLair/boss_onyxia.cpp
   Kalimdor/OnyxiasLair/onyxias_lair.h
   Kalimdor/OnyxiasLair/instance_onyxias_lair.cpp
+  Kalimdor/RagefireChasm/instance_ragefire_chasm.cpp
+  Kalimdor/DireMaul/instance_dire_maul.cpp
   Kalimdor/HallsOfOrigination/instance_halls_of_origination.cpp
   Kalimdor/HallsOfOrigination/halls_of_origination.h
   Kalimdor/HallsOfOrigination/boss_ammunae.cpp
